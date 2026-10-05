@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="between" style="margin-bottom:20px">
+  <div>
+    <h1 style="margin:0">✏️ Templates de messages</h1>
+    <p class="muted" style="margin-top:6px">
+      Créez, modifiez et personnalisez les messages envoyés à vos clients.
+    </p>
+  </div>
+  <a class="btn" href="#" onclick="document.getElementById('modal-nouveau').style.display='flex';return false;">
+    ＋ Nouveau template
+  </a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Type</th>
+        <th>Niveau</th>
+        <th>Sujet</th>
+        <th style="width:180px">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for tid, t in templates.items() %}
+      <tr>
+        <td>
+          <a href="{{ url_for('templates_editer', tid=tid) }}"
+             style="color:var(--vert);font-weight:600">
+            {{ t.nom }}
+          </a>
+          <div class="muted" style="font-size:11px">id : {{ tid }}</div>
+        </td>
+        <td>
+          {% if t.type == 'recap_hebdo' %}
+            <span class="tag" style="background:#c08a1f">📋 Récap</span>
+          {% else %}
+            <span class="tag t-paye">📧 Relance</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if t.niveau %}
+            <span class="muted" style="font-size:12px">{{ t.niveau }}</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="muted" style="font-size:12px">{{ t.sujet[:60] }}</td>
+        <td>
+          <div class="flex" style="gap:6px">
+            <a class="btn secondary sm" href="{{ url_for('templates_editer', tid=tid) }}">✏️ Éditer</a>
+            <form method="post" action="{{ url_for('templates_dupliquer', tid=tid) }}" style="display:inline">
+              <button class="btn secondary sm" type="submit" title="Dupliquer">📋</button>
+            </form>
+            <form method="post" action="{{ url_for('templates_supprimer', tid=tid) }}"
+                  onsubmit="return confirm('Supprimer ce template ?');" style="display:inline">
+              <button class="btn warn sm" type="submit" title="Supprimer">🗑️</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ─── Modal nouveau template ─── #}
+<div id="modal-nouveau" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+     z-index:9999;align-items:center;justify-content:center">
+  <div class="card" style="max-width:520px;width:90%;margin:0">
+    <div class="between" style="margin-bottom:16px">
+      <h2 style="margin:0">＋ Nouveau template</h2>
+      <button type="button" class="btn secondary sm"
+              onclick="document.getElementById('modal-nouveau').style.display='none'">✕</button>
+    </div>
+    <form method="post" action="{{ url_for('templates_nouveau') }}">
+      <p>
+        <label style="font-size:13px;font-weight:600">Nom</label>
+        <input name="nom" required placeholder="Ex: Relance spéciale été"
+               style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Type</label>
+        <select name="type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+          <option value="relance">📧 Relance</option>
+          <option value="recap_hebdo">📋 Récap hebdo</option>
+        </select>
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Niveau (relance uniquement)</label>
+        <select name="niveau" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+          <option value="rappel_1">Rappel amiable</option>
+          <option value="rappel_2">Rappel</option>
+          <option value="rappel_3">Relance ferme</option>
+          <option value="med">Mise en demeure</option>
+          <option value="contentieux">Contentieux</option>
+        </select>
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Sujet</label>
+        <input name="sujet" placeholder="Ex: Rappel de facture — AVO GREEN"
+               style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Corps (vous pourrez l'éditer après)</label>
+        <textarea name="corps" rows="5"
+                  style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-family:inherit;margin-top:4px"></textarea>
+      </p>
+      <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
+        <button type="button" class="btn secondary"
+                onclick="document.getElementById('modal-nouveau').style.display='none'">Annuler</button>
+        <button class="btn" type="submit">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

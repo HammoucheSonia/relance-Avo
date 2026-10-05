@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Statistiques</h1>
+
+<div class="kpi-grid">
+  <div class="kpi gold">
+    <div class="lbl">À relancer</div>
+    <div class="val" data-target="{{ stats.a_relancer }}">0</div>
+    <div class="sub">sur {{ stats.total_clients }} clients</div>
+  </div>
+  <div class="kpi vert">
+    <div class="lbl">Relancés</div>
+    <div class="val" data-target="{{ stats.deja_relances }}">0</div>
+    <div class="sub">emails envoyés</div>
+  </div>
+  <div class="kpi vert">
+    <div class="lbl">Payés</div>
+    <div class="val" data-target="{{ stats.payes }}">0</div>
+    <div class="sub">taux {{ stats.taux_recouvrement }} %</div>
+  </div>
+  <div class="kpi">
+    <div class="lbl">Encaissé</div>
+    <div class="val" data-target="{{ stats.total_paye }}" data-suffix=" €">0 €</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Encaissements — 7 derniers jours</h2>
+  <div style="height:260px"><canvas id="line"></canvas></div>
+</div>
+
+{% if paiements %}
+<div class="card">
+  <h2>Derniers paiements reçus</h2>
+  <table>
+    <thead><tr><th>Client</th><th>Email</th><th class="num">Montant</th><th>Date</th><th>Session</th></tr></thead>
+    <tbody>
+    {% for sid, p in paiements.items()|list|reverse %}
+      {% if loop.index <= 20 %}
+      <tr>
+        <td><a href="{{ url_for('client', code=p.code_client) }}" style="color:var(--vert);font-weight:600">Code {{ p.code_client }}</a></td>
+        <td class="muted">{{ p.email or '—' }}</td>
+        <td class="num" style="color:var(--vert);font-weight:700">{{ "{:,.2f}".format(p.montant).replace(",", " ") }} €</td>
+        <td class="muted">{{ p.date[:19]|replace('T',' ') }}</td>
+        <td class="muted" style="font-size:11px">{{ sid[:24] }}…</td>
+      </tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Historique des relances</h2>
+  {% if hist %}
+  <table>
+    <thead>
+      <tr><th>Client</th><th>Statut</th><th>Dernière relance</th>
+          <th class="num">Nb envois</th><th class="num">Dernier montant</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+    {% for code, h in hist.items() %}
+      <tr>
+        <td><a href="{{ url_for('client', code=code) }}" style="color:var(--vert);font-weight:600">Code {{ code }}</a></td>
+        <td>
+          {% set s = h.statut or 'en_attente' %}
+          <span class="tag t-{{ s }}">{{ s|replace('_',' ')|capitalize }}</span>
+        </td>
+        <td class="muted">{{ (h.derniere_relance or '—')[:19]|replace('T',' ') }}</td>
+        <td class="num">{{ h.envois|length }}</td>
+        <td class="num">
+          {% if h.envois %}{{ "{:,.2f}".format(h.envois[-1].montant).replace(",", " ") }} €{% else %}—{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('changer_statut', code=code) }}" style="display:inline">
+            <select name="statut" onchange="this.form.submit()"
+                    style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--card);color:var(--text)">
+              {% for k, v in [('envoye','Relancé'),('paye','Payé'),('litige','Litige'),('ignore','Ignoré')] %}
+                <option value="{{ k }}" {{ 'selected' if h.statut==k }}>{{ v }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">Aucun envoi enregistré.</p>
+  {% endif %}
+</div>
+
+<script>
+  drawLine(document.getElementById('line'), {{ days_json|tojson }}, {{ values_json|tojson }});
+</script>
+{% endblock %}

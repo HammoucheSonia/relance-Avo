@@ -1,0 +1,8 @@
+{
+  "name": "AVO GREEN — Relances",
+  "short_name": "Relances",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e5c3a",
+  "theme_color": "#1e5c3a"
+}

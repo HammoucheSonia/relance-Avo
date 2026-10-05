@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="card" style="background:var(--vert-pale);border-left:4px solid var(--vert);
+     padding:14px 18px;margin-bottom:16px">
+  <div class="between" style="flex-wrap:wrap;gap:10px">
+    <div>
+      <strong>📌 Session active</strong>
+      <div class="muted" style="font-size:12px">
+        Fréquences et templates choisis ici sont sauvegardés pour les prochaines analyses.
+      </div>
+    </div>
+    <div class="flex">
+      <a class="btn secondary sm" href="{{ url_for('dashboard') }}">← Tableau de bord</a>
+      <form method="post" action="{{ url_for('session_finaliser') }}"
+            onsubmit="return confirm('Finaliser la session ?');" style="display:inline">
+        <input type="hidden" name="note" value="">
+        <button class="btn sm" type="submit">✔ Finaliser la session</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if nouveaux %}
+<div class="card" id="nouveaux-banner"
+     style="background:#fff4e5;border-left:4px solid var(--or);padding:18px 20px">
+  <div class="flex" style="align-items:flex-start">
+    <span style="font-size:32px;line-height:1">🆕</span>
+    <div style="flex:1">
+      <div style="font-size:16px;font-weight:700">
+        <span id="nouveaux-count">{{ nouveaux|length }}</span>
+        nouveau(x) contact(s) détecté(s)
+      </div>
+      <div class="muted" style="margin-top:4px">
+        Choisissez leur <strong>fréquence</strong> et leur <strong>template</strong>.
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:12px">
+        Codes : {{ nouveaux|join(', ') }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="between" style="margin-bottom:8px">
+    <h2 style="margin:0">Relances préparées — {{ relances|length }} client(s)</h2>
+    <a class="btn secondary sm" href="{{ url_for('templates_liste') }}">
+      ✏️ Gérer les templates
+    </a>
+  </div>
+
+  {% if stripe_actif %}
+  <div class="card" style="background:var(--vert-pale);margin:12px 0;padding:14px 18px">
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+      <input type="checkbox" id="lien_global" {{ 'checked' if lien_global }}>
+      <span>
+        <strong>💳 Activer les liens de paiement Stripe</strong>
+        <div class="muted" style="font-size:12px">
+          Lien auto pour montants ≤ {{ cfg.STRIPE_SEUIL_PETIT }} € ou client « difficile ».
+        </div>
+      </span>
+    </label>
+  </div>
+  {% endif %}
+
+  <p class="muted" style="margin-top:10px">
+    Cliquez sur 📅 ou ✏️ pour changer en direct la fréquence et le template d'un client.
+  </p>
+
+  <form method="post" action="{{ url_for('envoyer', job_id=job.id) }}" id="form-envoi">
+    <input type="hidden" name="lien_global" id="lien_global_hidden"
+           value="{{ '1' if lien_global else '0' }}">
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px"><input type="checkbox" id="all" checked></th>
+          <th>Client</th>
+          <th>📅 Fréquence</th>
+          <th>✏️ Template</th>
+          <th>Niveau</th>
+          <th class="num">À relancer</th>
+          <th class="num">Total dû</th>
+          {% if stripe_actif %}<th style="width:50px">💳</th>{% endif %}
+          <th>PJ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in relances %}
+        {% set is_new = r.code in nouveaux_set %}
+        <tr id="row-{{ r.code }}" class="{{ 'row-nouveau' if is_new }}"
+            style="{{ 'background:#fffaf0;' if is_new }}">
+          <td>
+            {% if r.email %}
+              <input type="checkbox" name="codes" value="{{ r.code }}" checked>
+            {% else %}
+              <input type="checkbox" disabled title="Pas d'email">
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:600;display:flex;align-items:center;gap:6px">
+              {% if is_new %}<span title="Nouveau contact">🆕</span>{% endif %}
+              {{ r.nom }}
+            </div>
+            <div class="muted">{{ r.email or "⚠ pas d'email" }}</div>
+          </td>
+          <td>
+            <select class="freq-select" data-code="{{ r.code }}"
+                    style="padding:5px 8px;border-radius:6px;font-size:12px;
+                           border:1px solid var(--border);background:var(--card);
+                           color:var(--text);font-weight:600;
+                           border-left:4px solid {{ freq_colors.get(r.frequence, '#9ca3af') }}">
+              {% for fk, fv in frequences.items() %}
+                <option value="{{ fk }}" {{ 'selected' if r.frequence==fk }}>
+                  {{ fv.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select class="tpl-select" data-code="{{ r.code }}" name="tpl_{{ r.code }}"
+                    style="padding:5px 8px;border-radius:6px;font-size:12px;
+                           border:1px solid var(--border);background:var(--card);
+                           color:var(--text);max-width:180px">
+              <option value="">— Auto —</option>
+              {% for tid, t in templates.items() %}
+                {% if t.type == 'relance' %}
+                  <option value="{{ tid }}" {{ 'selected' if r.template_id==tid }}>
+                    {{ t.nom }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </td>
+          <td><span class="tag t-{{ r.template }}">{{ r.niveau_label }}</span></td>
+          <td class="num" style="color:var(--vert);font-weight:700">
+            {{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €
+          </td>
+          <td class="num">
+            {% if r.frequence and r.solde_du > r.montant_filtre + 0.5 %}
+              <span class="muted" style="font-size:11px">
+                {{ "{:,.2f}".format(r.solde_du).replace(",", " ") }} €
+              </span>
+            {% else %}—{% endif %}
+          </td>
+
+          {% if stripe_actif %}
+          <td style="text-align:center">
+            <input type="checkbox" name="lien_clients" value="{{ r.code }}"
+                   {{ 'checked' if r.code in liens }}>
+          </td>
+          {% endif %}
+
+          <td>
+            <div id="pj-{{ r.code }}">
+              {% for f in joints[r.code] %}
+                <div class="pj">
+                  <span>📄</span>
+                  <a href="{{ url_for('view_facture', code=r.code, fname=f) }}" target="_blank">{{ f }}</a>
+                  <button class="del" type="button" onclick="delPj('{{ r.code }}','{{ f }}')">×</button>
+                </div>
+              {% endfor %}
+            </div>
+            <label class="drop" style="padding:4px;font-size:11px">
+              <input type="file" accept="application/pdf" multiple
+                     onchange="uploadPj('{{ r.code }}', this)">
+              <span>＋</span>
+            </label>
+          </td>
+          <td><a class="btn secondary sm" href="#mail-{{ r.code }}">Aperçu</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="between" style="margin-top:20px">
+      <div class="muted">
+        {{ relances|selectattr('email')|list|length }} client(s) prêt(s)
+      </div>
+      <div class="flex">
+        <a class="btn secondary" href="{{ url_for('dashboard') }}">Retour</a>
+        <button class="btn" type="submit">📧 Envoyer les relances sélectionnées</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{# ─── Aperçus ─── #}
+{% for r in relances %}
+<div class="card" id="mail-{{ r.code }}">
+  <div class="between" style="margin-bottom:10px">
+    <h3 style="margin:0">{{ r.nom }} <span class="muted">({{ r.code }})</span></h3>
+    <div class="flex">
+      {% if r.frequence %}
+        <span class="tag t-rappel_1">📅 {{ r.frequence_label }}</span>
+      {% endif %}
+      {% if r.code in liens %}<span class="tag t-paye">💳 Lien</span>{% endif %}
+      <span class="tag t-{{ r.template }}">{{ r.niveau_label }}</span>
+    </div>
+  </div>
+  <div style="margin-bottom:8px">
+    <div class="muted" style="font-size:11px;font-weight:600">SUJET</div>
+    <div id="sujet-{{ r.code }}" style="font-weight:600;padding:4px 0">
+      {{ apercus[r.code].sujet }}
+    </div>
+  </div>
+  <pre class="mail" id="corps-{{ r.code }}">{{ apercus[r.code].corps }}</pre>
+</div>
+{% endfor %}
+
+<script>
+document.getElementById('all')?.addEventListener('change', e => {
+  document.querySelectorAll('input[name=codes]').forEach(c => {
+    if(!c.disabled) c.checked = e.target.checked;
+  });
+});
+document.getElementById('lien_global')?.addEventListener('change', e => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('lien', e.target.checked ? '1' : '0');
+  window.location.href = url.toString();
+});
+
+// ─── Changement de fréquence en direct ───────────────
+document.querySelectorAll('.freq-select').forEach(sel => {
+  sel.addEventListener('change', async (e) => {
+    const code = e.target.dataset.code;
+    const freq = e.target.value;
+    try {
+      const r = await fetch(`/contact/${code}/frequence`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({frequence: freq})
+      });
+      const j = await r.json();
+      if(j.ok){
+        toast(`📅 ${j.label}`);
+        const row = document.getElementById('row-' + code);
+        if(row && row.classList.contains('row-nouveau')){
+          row.classList.remove('row-nouveau');
+          row.style.background = '';
+          row.querySelector('td span[title="Nouveau contact"]')?.remove();
+          const badge = document.getElementById('nouveaux-count');
+          if(badge){
+            const n = parseInt(badge.textContent) - 1;
+            if(n <= 0) document.getElementById('nouveaux-banner')?.remove();
+            else badge.textContent = n;
+          }
+        }
+        const colors = {
+          '': '#9ca3af', 'hebdo': '#2a7a4a',
+          'quinzaine': '#c08a1f', 'mensuel': '#1e5c3a'
+        };
+        e.target.style.borderLeft = `4px solid ${colors[freq] || '#9ca3af'}`;
+      }
+    } catch(err){ toast('Erreur réseau', 'error'); }
+  });
+});
+
+// ─── Changement de template : recharge la page pour régénérer l'aperçu ───
+document.querySelectorAll('.tpl-select').forEach(sel => {
+  sel.addEventListener('change', async (e) => {
+    const code = e.target.dataset.code;
+    const tid = e.target.value;
+    try {
+      const r = await fetch(`/contact/${code}/template`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({template_id: tid})
+      });
+      const j = await r.json();
+      if(j.ok){
+        toast(`✏️ Template mis à jour`);
+        // Recharge la page pour voir le nouvel aperçu
+        setTimeout(() => window.location.reload(), 500);
+      }
+    } catch(err){ toast('Erreur réseau', 'error'); }
+  });
+});
+</script>
+{% endblock %}

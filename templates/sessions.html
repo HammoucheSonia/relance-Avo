@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="between" style="margin-bottom:20px">
+  <h1 style="margin:0">📂 Sessions archivées</h1>
+  <a class="btn secondary" href="{{ url_for('dashboard') }}">← Tableau de bord</a>
+</div>
+
+{% if archives %}
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>Finalisée le</th><th>Job</th><th class="num">Relances</th>
+          <th class="num">Total dû</th><th class="num">Encaissé</th>
+          <th class="num">Taux</th><th>Note</th></tr>
+    </thead>
+    <tbody>
+    {% for a in archives %}
+      <tr>
+        <td>{{ a.finalise_le[:19]|replace('T',' ') }}</td>
+        <td><code style="font-size:11px">{{ a.job_id }}</code></td>
+        <td class="num">{{ a.stats.total_clients }}</td>
+        <td class="num">{{ "{:,.2f}".format(a.stats.total_du).replace(",", " ") }} €</td>
+        <td class="num" style="color:var(--vert);font-weight:700">
+          {{ "{:,.2f}".format(a.stats.total_paye).replace(",", " ") }} €
+        </td>
+        <td class="num">{{ a.stats.taux_recouvrement }} %</td>
+        <td class="muted">{{ a.note or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:48px 20px">
+  <div style="font-size:52px">📭</div>
+  <h2 style="margin-top:16px">Aucune session archivée</h2>
+  <p class="muted">Finalisez une session pour la voir apparaître ici.</p>
+  <a class="btn" href="{{ url_for('dashboard') }}">Retour au tableau de bord</a>
+</div>
+{% endif %}
+{% endblock %}

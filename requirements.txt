@@ -1,0 +1,5 @@
+Flask==3.0.3
+pdfplumber==0.11.4
+python-dotenv==1.0.1
+stripe==10.12.0
+werkzeug==3.0.3

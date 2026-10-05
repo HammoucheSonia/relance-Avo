@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="card">
+  <div class="between" style="margin-bottom:12px">
+    <h2 style="margin:0">Base contacts ({{ contacts|length }})</h2>
+    {% if nouveaux_codes %}
+      <span class="tag t-rappel_2">🆕 {{ nouveaux_codes|length }} à classer</span>
+    {% endif %}
+  </div>
+
+  <div class="card" style="background:var(--vert-pale);padding:12px 16px;margin-bottom:16px">
+    <strong style="font-size:13px">📅 Fréquence · ✏️ Template</strong>
+    <div class="muted" style="font-size:12px;margin-top:4px">
+      <strong>Vide</strong> = toutes les factures · <strong>Hebdo</strong> = 7 j ·
+      <strong>Quinzaine</strong> = 15 j · <strong>Mensuel</strong> = 30 j<br>
+      Le <strong>template</strong> est facultatif : laissez « Auto » pour un choix automatique selon le niveau.
+    </div>
+  </div>
+
+  <form method="post">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th style="width:140px">📅 Fréquence</th>
+          <th style="width:170px">✏️ Template</th>
+          <th>Remarque</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for code, c in contacts.items() %}
+        <tr>
+          <td><strong>{{ code }}</strong>
+              <input type="hidden" name="code" value="{{ code }}"></td>
+          <td><input name="nom_{{ code }}" value="{{ c.nom }}"
+                     style="width:100%;padding:6px;border:1px solid var(--border);
+                            border-radius:6px;background:var(--card);color:var(--text)"></td>
+          <td><input name="email_{{ code }}" type="email" value="{{ c.email }}"
+                     style="width:100%;padding:6px;border:1px solid var(--border);
+                            border-radius:6px;background:var(--card);color:var(--text)"></td>
+          <td><input name="tel_{{ code }}" value="{{ c.telephone }}"
+                     style="width:100%;padding:6px;border:1px solid var(--border);
+                            border-radius:6px;background:var(--card);color:var(--text)"></td>
+          <td>
+            <select name="freq_{{ code }}"
+                    style="width:100%;padding:6px;border:1px solid var(--border);
+                           border-radius:6px;background:var(--card);color:var(--text)">
+              {% for fk, fv in frequences.items() %}
+                <option value="{{ fk }}" {{ 'selected' if c.frequence==fk }}>
+                  {{ fv.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="tpl_{{ code }}"
+                    style="width:100%;padding:6px;border:1px solid var(--border);
+                           border-radius:6px;background:var(--card);color:var(--text)">
+              <option value="">— Auto —</option>
+              {% for tid, t in templates.items() %}
+                {% if t.type == 'relance' %}
+                  <option value="{{ tid }}" {{ 'selected' if c.template_id==tid }}>
+                    {{ t.nom }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </td>
+          <td><input name="remarque_{{ code }}" value="{{ c.remarque }}"
+                     style="width:100%;padding:6px;border:1px solid var(--border);
+                            border-radius:6px;background:var(--card);color:var(--text)"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div style="margin-top:16px">
+      <button class="btn" type="submit">💾 Enregistrer</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

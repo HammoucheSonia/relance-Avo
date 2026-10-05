@@ -1,0 +1,58 @@
+{
+  "relance_rappel_1": {
+    "nom": "Rappel amiable",
+    "type": "relance",
+    "niveau": "rappel_1",
+    "sujet": "Petit rappel : facture en attente de règlement",
+    "corps": "{{nom}},\n\nSauf erreur de notre part, nous n'avons pas encore reçu le règlement de la (des) facture(s) ci-dessous{{periode_suffix}}.\n\n{{factures_table}}\n\nSi ce règlement a déjà été effectué, merci d'ignorer ce message.\n\nBien cordialement,\n\n{{signature}}"
+  },
+  "relance_rappel_2": {
+    "nom": "Rappel standard",
+    "type": "relance",
+    "niveau": "rappel_2",
+    "sujet": "Rappel : facture(s) échue(s) — AVO GREEN",
+    "corps": "{{nom}},\n\nNous revenons vers vous concernant la (les) facture(s) suivante(s), arrivée(s) à échéance et toujours impayée(s).\n\n{{factures_table}}\n\nSi ce règlement a déjà été effectué, merci d'ignorer ce message.\n\nBien cordialement,\n\n{{signature}}"
+  },
+  "relance_rappel_3": {
+    "nom": "Relance ferme",
+    "type": "relance",
+    "niveau": "rappel_3",
+    "sujet": "Relance : facture(s) impayée(s) — action requise",
+    "corps": "{{nom}},\n\nMalgré nos précédents rappels, nous constatons que la (les) facture(s) ci-dessous reste(nt) impayée(s). Merci de régulariser sous 8 jours.\n\n{{factures_table}}\n\nCordialement,\n\n{{signature}}"
+  },
+  "relance_med": {
+    "nom": "Mise en demeure amiable",
+    "type": "relance",
+    "niveau": "med",
+    "sujet": "Mise en demeure amiable — AVO GREEN",
+    "corps": "{{nom}},\n\nEn application des articles 1231-6 et suivants du Code civil, nous vous mettons en demeure de régler sous 8 jours la (les) facture(s) suivante(s) :\n\n{{factures_table}}\n\nÀ défaut, des pénalités de retard et l'indemnité forfaitaire de 40 € pourront être appliquées (art. L441-10 du Code de commerce).\n\nVeuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.\n\n{{signature}}"
+  },
+  "relance_contentieux": {
+    "nom": "Dernier avis avant contentieux",
+    "type": "relance",
+    "niveau": "contentieux",
+    "sujet": "Dernier avis avant recouvrement — AVO GREEN",
+    "corps": "{{nom}},\n\nSans réponse de votre part, ce dossier sera transmis à notre service contentieux pour recouvrement. Nous vous invitons à régulariser la situation sous 8 jours.\n\n{{factures_table}}\n\nSalutations distinguées,\n\n{{signature}}"
+  },
+  "recap_hebdo": {
+    "nom": "Récap hebdomadaire",
+    "type": "recap_hebdo",
+    "niveau": "",
+    "sujet": "📋 Vos achats non réglés chez AVO GREEN",
+    "corps": "{{nom}},\n\nComme chaque vendredi, voici un récapitulatif de vos achats non réglés chez AVO GREEN. Ce message est purement informatif — aucun frais supplémentaire n'est appliqué à ce stade.\n\n{{factures_table}}\n\n💡 Vous pouvez régler par virement sur notre compte habituel.\n   Pour toute question sur une facture, répondez simplement à cet email.\n\nMerci de votre confiance.\n\nBien cordialement,\n\n{{signature}}"
+  },
+  "relance_amicale": {
+    "nom": "Rappel amical (doux)",
+    "type": "relance",
+    "niveau": "rappel_1",
+    "sujet": "Un petit coucou de AVO GREEN 🌿",
+    "corps": "Bonjour {{nom}},\n\nJ'espère que tout va bien chez vous 🌸\n\nJe me permets de vous faire un petit rappel tout amical : il reste quelques factures à régler de votre côté.\n\n{{factures_table}}\n\nPeut-être un oubli ? Si vous avez déjà réglé, ignorez simplement ce message.\n\nBelle journée à vous,\n\n{{signature}}"
+  },
+  "rappel_amiable_copie": {
+    "nom": "Rappel amiable (copie)",
+    "type": "relance",
+    "niveau": "rappel_1",
+    "sujet": "Petit rappel : facture en attente de règlement",
+    "corps": "{{nom}},\n\nSauf erreur de notre part, nous n'avons pas encore reçu le règlement de la (des) facture(s) ci-dessous{{periode_suffix}}.\n\n{{factures_table}}\n\nSi ce règlement a déjà été effectué, merci d'ignorer ce message.\n\nBien cordialement,\n\n{{signature}}"
+  }
+}

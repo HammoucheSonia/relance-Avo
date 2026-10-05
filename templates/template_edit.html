@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="between" style="margin-bottom:20px">
+  <div>
+    <h1 style="margin:0">✏️ {{ tpl.nom }}</h1>
+    <p class="muted" style="margin-top:6px">
+      id : <code>{{ tid }}</code> ·
+      {% if tpl.type == 'recap_hebdo' %}📋 Récap hebdo{% else %}📧 Relance{% endif %}
+    </p>
+  </div>
+  <a class="btn secondary" href="{{ url_for('templates_liste') }}">← Retour aux templates</a>
+</div>
+
+<div class="grid-2" style="align-items:start">
+  {# ─── Éditeur ─── #}
+  <div class="card">
+    <form method="post" action="{{ url_for('templates_enregistrer', tid=tid) }}" id="form-edit">
+      <p>
+        <label style="font-size:13px;font-weight:600">Nom</label>
+        <input name="nom" value="{{ tpl.nom }}" required
+               style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Type</label>
+        <select name="type" id="sel-type"
+                style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+          <option value="relance" {{ 'selected' if tpl.type=='relance' }}>📧 Relance</option>
+          <option value="recap_hebdo" {{ 'selected' if tpl.type=='recap_hebdo' }}>📋 Récap hebdo</option>
+        </select>
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Niveau</label>
+        <select name="niveau" id="sel-niveau"
+                style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+          <option value="">(aucun)</option>
+          <option value="rappel_1" {{ 'selected' if tpl.niveau=='rappel_1' }}>Rappel amiable</option>
+          <option value="rappel_2" {{ 'selected' if tpl.niveau=='rappel_2' }}>Rappel</option>
+          <option value="rappel_3" {{ 'selected' if tpl.niveau=='rappel_3' }}>Relance ferme</option>
+          <option value="med" {{ 'selected' if tpl.niveau=='med' }}>Mise en demeure</option>
+          <option value="contentieux" {{ 'selected' if tpl.niveau=='contentieux' }}>Contentieux</option>
+        </select>
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Sujet</label>
+        <input name="sujet" id="inp-sujet" value="{{ tpl.sujet }}"
+               style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-top:4px">
+      </p>
+      <p>
+        <label style="font-size:13px;font-weight:600">Corps du message</label>
+        <textarea name="corps" id="inp-corps" rows="16"
+                  style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.5;margin-top:4px">{{ tpl.corps }}</textarea>
+      </p>
+
+      <div class="flex" style="gap:8px">
+        <button class="btn" type="submit">💾 Enregistrer</button>
+        <button class="btn secondary" type="button" onclick="apercu()">👁️ Aperçu</button>
+      </div>
+    </form>
+  </div>
+
+  {# ─── Variables + aperçu ─── #}
+  <div>
+    <div class="card">
+      <h3>📌 Variables disponibles</h3>
+      <p class="muted" style="font-size:12px">
+        Cliquez sur une variable pour l'insérer à la fin du corps.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        {% for v, desc in vars_dispo %}
+          <button type="button" class="btn secondary sm"
+                  style="font-size:11px;font-family:ui-monospace,monospace"
+                  title="{{ desc }}"
+                  onclick="insererVar('{{ v }}')">
+            {{ v }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card" id="apercu-card" style="display:none">
+      <div class="between" style="margin-bottom:8px">
+        <h3 style="margin:0">👁️ Aperçu (client fictif)</h3>
+        <button type="button" class="btn secondary sm" onclick="apercu()">🔄 Rafraîchir</button>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="muted" style="font-size:11px;font-weight:600">SUJET</div>
+        <div id="ap-sujet" style="font-weight:600;padding:6px 0"></div>
+      </div>
+      <pre class="mail" id="ap-corps"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+function insererVar(v) {
+  const ta = document.getElementById('inp-corps');
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const txt = ta.value;
+  ta.value = txt.slice(0, start) + v + txt.slice(end);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = start + v.length;
+}
+
+async function apercu() {
+  // On enregistre d'abord pour tester la dernière version
+  const form = document.getElementById('form-edit');
+  const fd = new FormData(form);
+  fd.append('_apercu', '1');
+
+  // On utilise un endpoint dédié pour l'aperçu avec le contenu actuel
+  const r = await fetch(`/templates/{{ tid }}/apercu`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      sujet: document.getElementById('inp-sujet').value,
+      corps: document.getElementById('inp-corps').value,
+      type: document.getElementById('sel-type').value,
+      niveau: document.getElementById('sel-niveau').value,
+    })
+  });
+  // Fallback : on enregistre puis on recharge l'aperçu depuis la base
+  const j = await r.json().catch(() => ({ok:false}));
+  if(j.ok){
+    document.getElementById('apercu-card').style.display = 'block';
+    document.getElementById('ap-sujet').textContent = j.sujet;
+    document.getElementById('ap-corps').textContent = j.corps;
+    document.getElementById('apercu-card').scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else {
+    alert("Erreur d'aperçu");
+  }
+}
+</script>
+
+{% endblock %}

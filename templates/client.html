@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="between" style="margin-bottom:20px">
+  <h1 style="margin:0">
+    {{ nom }}
+    <span class="muted" style="font-size:16px">(Code {{ code }})</span>
+    {% if frequence %}
+      <span class="tag t-rappel_1" style="font-size:11px;vertical-align:middle">
+        📅 {{ frequences[frequence].label }}
+      </span>
+    {% endif %}
+    {% if est_nouveau %}
+      <span class="tag t-rappel_2" style="font-size:11px;vertical-align:middle">🆕 Nouveau</span>
+    {% endif %}
+  </h1>
+  <a class="btn secondary sm" href="{{ url_for('dashboard') }}">← Retour</a>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Statut</h2>
+    <form method="post" action="{{ url_for('changer_statut', code=code) }}">
+      <select name="statut" onchange="this.form.submit()"
+              style="padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px">
+        {% for k, v in [('a_relancer','À relancer'),('envoye','Relancé'),
+                        ('paye','Payé'),('litige','Litige'),('ignore','Ignoré')] %}
+          <option value="{{ k }}" {{ 'selected' if hist.statut==k }}>{{ v }}</option>
+        {% endfor %}
+      </select>
+    </form>
+
+    {% if hist.paiement %}
+    <div style="margin-top:20px;padding:12px;background:var(--vert-pale);border-radius:8px">
+      <div style="font-weight:600;color:var(--vert)">💰 Paiement reçu</div>
+      <div class="muted" style="margin-top:4px">
+        {{ "{:,.2f}".format(hist.paiement.montant).replace(",", " ") }} € —
+        le {{ hist.paiement.date[:19]|replace('T',' ') }}
+      </div>
+    </div>
+    {% endif %}
+
+    <h3 style="margin-top:20px">Pièces jointes disponibles</h3>
+    <div id="pj-{{ code }}">
+      {% for f in joints %}
+        <div class="pj">
+          <span>📄</span>
+          <a href="{{ url_for('view_facture', code=code, fname=f) }}" target="_blank">{{ f }}</a>
+          <button class="del" type="button" onclick="delPj('{{ code }}','{{ f }}')">×</button>
+        </div>
+      {% endfor %}
+      {% if not joints %}<p class="muted">Aucune facture PDF jointe.</p>{% endif %}
+    </div>
+    <label class="drop" style="margin-top:10px;padding:10px">
+      <input type="file" accept="application/pdf" multiple
+             onchange="uploadPj('{{ code }}', this)">
+      <span>＋ Ajouter des PDF</span>
+    </label>
+  </div>
+
+  <div class="card">
+    <h2>Factures à régler</h2>
+    {% if factures %}
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th><th>Date</th><th>Éch.</th>
+          <th class="num">TTC</th><th class="num">Solde</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in factures %}
+        <tr>
+          <td>{{ f.numero }}</td>
+          <td>{{ f.date }}</td>
+          <td>{{ f.echeance }}</td>
+          <td class="num">{{ "{:,.2f}".format(f.ttc).replace(",", " ") }} €</td>
+          <td class="num"><strong>{{ "{:,.2f}".format(f.solde_du).replace(",", " ") }} €</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">Aucune facture impayée.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Historique</h2>
+  {% if evenements %}
+  <div class="timeline">
+    {% for e in evenements %}
+    <div class="timeline-item {{ e.type }}">
+      <div class="tl-date">{{ e.date[:10] }} · {{ e.date[11:16] }}</div>
+      <div class="tl-title">
+        {% if e.type == 'envoi' %}📧{% elif e.type == 'paiement' %}💰{% elif e.type == 'recap' %}📋{% endif %}
+        {{ e.titre }}
+        {% if e.montant %}
+          <span class="tl-amount">— {{ "{:,.2f}".format(e.montant).replace(",", " ") }} €</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="muted">Aucun événement enregistré.</p>
+  {% endif %}
+</div>
+{% endblock %}

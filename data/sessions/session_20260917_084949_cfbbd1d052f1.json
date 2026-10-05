@@ -1,0 +1,16 @@
+{
+  "job_id": "cfbbd1d052f1",
+  "finalise_le": "2026-09-17T08:49:49",
+  "note": "",
+  "stats": {
+    "a_relancer": 1,
+    "sans_email": 288,
+    "deja_relances": 1,
+    "payes": 0,
+    "total_clients": 289,
+    "total_du": 902548.72,
+    "total_envoye": 80981.0,
+    "total_paye": 0,
+    "taux_recouvrement": 0.0
+  }
+}

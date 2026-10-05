@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Pipeline de recouvrement</h1>
+<p class="muted">Glissez-déposez les cartes pour changer le statut d'un client.</p>
+
+<div class="kanban">
+  {% for statut, label in [('a_relancer','À relancer'),('envoye','Relancé'),
+                            ('paye','Payé'),('litige','Litige')] %}
+  <div class="kcol" data-statut="{{ statut }}">
+    <header>
+      <span class="dot" style="background:{{ couleurs[statut] }}"></span>
+      <strong>{{ label }}</strong>
+      <span class="badge-count">{{ colonnes[statut]|length }}</span>
+      <span class="muted" style="margin-left:auto;font-size:12px">
+        {{ "{:,.0f}".format(sommes[statut]).replace(",", " ") }} €
+      </span>
+    </header>
+    <div class="klist" ondrop="drop(event)" ondragover="allowDrop(event)">
+      {% for r in colonnes[statut] %}
+      <div class="kcard" draggable="true" ondragstart="drag(event)"
+           data-code="{{ r.code }}">
+        <div class="flex" style="justify-content:space-between;align-items:flex-start">
+          <strong style="font-size:14px">{{ r.nom }}</strong>
+          <span class="tag t-{{ r.template }}" style="font-size:10px">{{ r.niveau_label }}</span>
+        </div>
+        <div class="muted" style="font-size:11px;margin-top:4px">
+          Code {{ r.code }} · {{ r.anciennete_max }} j
+        </div>
+        <div class="kamount">{{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function drag(e){ e.dataTransfer.setData('code', e.target.dataset.code); }
+function allowDrop(e){ e.preventDefault(); e.currentTarget.classList.add('drag'); }
+document.querySelectorAll('.klist').forEach(el => {
+  el.addEventListener('dragleave', () => el.classList.remove('drag'));
+  el.addEventListener('drop', async (e) => {
+    e.preventDefault(); el.classList.remove('drag');
+    const code = e.dataTransfer.getData('code');
+    const statut = el.closest('.kcol').dataset.statut;
+    const card = document.querySelector(`.kcard[data-code="${code}"]`);
+    if(!card) return;
+    el.appendChild(card);
+    const r = await fetch(`/statut/${code}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statut})
+    });
+    if(r.ok) toast(`Client ${code} → ${statut.replace('_',' ')}`);
+    else toast('Erreur', 'error');
+  });
+});
+</script>
+{% endblock %}

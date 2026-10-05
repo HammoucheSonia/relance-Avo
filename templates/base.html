@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Relances — {{ cfg.COMPANY_NAME }}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="leaf">🌿</div>
+    <span>{{ cfg.COMPANY_NAME }} <span style="opacity:.65;font-weight:400">· Relances</span></span>
+  </div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint=='dashboard' }}">Tableau de bord</a>
+    <a href="{{ url_for('planning') }}" class="{{ 'active' if request.endpoint=='planning' }}">📅 Planning</a>
+    <a href="{{ url_for('recap_hebdo_preview') }}" class="{{ 'active' if request.endpoint=='recap_hebdo_preview' }}">📋 Récap hebdo</a>
+    <a href="{{ url_for('templates_liste') }}" class="{{ 'active' if request.endpoint and 'templates' in request.endpoint }}">✏️ Messages</a>
+    <a href="{{ url_for('kanban') }}" class="{{ 'active' if request.endpoint=='kanban' }}">Kanban</a>
+    <a href="{{ url_for('stats_page') }}" class="{{ 'active' if request.endpoint=='stats_page' }}">Statistiques</a>
+    <a href="{{ url_for('contacts') }}" class="{{ 'active' if request.endpoint=='contacts' }}">Contacts</a>
+    <a href="{{ url_for('sessions_archivees') }}" class="{{ 'active' if request.endpoint=='sessions_archivees' }}">Archives</a>
+  </nav>
+</header>
+<main>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in msgs %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</main>
+<div id="toasts"></div>
+</body>
+</html>

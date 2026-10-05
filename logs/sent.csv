@@ -1,0 +1,12 @@
+date,code,nom,email,niveau,montant,objet,statut,pieces
+2026-09-17T01:37:23,295,LE STUDIO,soniiahamm@gmail.com,contentieux,80981.00,Dernier avis avant recouvrement — AVO GREEN,dry-run,16-09-26_13-24-22_316_1.PDF
+date,code,nom,email,niveau,montant,objet,statut,pieces
+2026-09-17T01:46:43,295,LE STUDIO,soniiahamm@gmail.com,contentieux,80981.00,Dernier avis avant recouvrement — AVO GREEN,dry-run,16-09-26_13-24-22_316_1.PDF
+date,code,nom,email,niveau,montant,objet,statut,pieces
+2026-09-17T09:04:53,295,LE STUDIO,soniiahamm@gmail.com,contentieux,80981.00,Dernier avis avant recouvrement — AVO GREEN,dry-run,16-09-26_13-24-22_316_1.PDF
+date,code,nom,email,niveau,montant,frequence,type_mail,template_id,objet,statut,pieces
+2026-10-04T17:54:13,295,LE STUDIO,soniiahamm@gmail.com,contentieux,39386.32,hebdo,recap_hebdo,recap_hebdo,📋 Vos achats non réglés chez AVO GREEN,dry-run,
+date,code,nom,email,niveau,montant,frequence,type_mail,template_id,objet,statut,pieces
+2026-10-04T18:29:10,295,LE STUDIO,soniiahamm@gmail.com,contentieux,39386.32,hebdo,recap_hebdo,recap_hebdo,📋 Vos achats non réglés chez AVO GREEN,sent,
+date,code,nom,email,niveau,montant,frequence,type_mail,template_id,objet,statut,pieces
+2026-10-04T18:29:22,295,LE STUDIO,soniiahamm@gmail.com,contentieux,39386.32,hebdo,recap_hebdo,recap_hebdo,📋 Vos achats non réglés chez AVO GREEN,sent,

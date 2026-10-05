@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block body %}
+
+{# ─── Statut SMTP ─────────────────────────────────── #}
+{% if not smtp_ok %}
+<div class="card" style="background:#fdecea;border-left:4px solid var(--rouge)">
+  <div class="flex">
+    <span style="font-size:28px">⚠️</span>
+    <div style="flex:1">
+      <strong style="color:var(--rouge)">Configuration SMTP à corriger</strong>
+      <div class="muted" style="margin-top:6px">{{ smtp_msg }}</div>
+      <div class="muted" style="margin-top:10px;font-size:12px">
+        Vérifie le fichier <code>.env</code> : SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD.
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card" style="background:var(--vert-pale);border-left:4px solid var(--vert)">
+  <div class="flex">
+    <span style="font-size:28px">✅</span>
+    <div style="flex:1">
+      <strong style="color:var(--vert)">SMTP configuré et fonctionnel</strong>
+      <div class="muted" style="margin-top:4px;font-size:13px">{{ smtp_msg }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ─── Test SMTP ───────────────────────────────────── #}
+<div class="card">
+  <h2>🧪 Envoyer un mail de test</h2>
+  <p class="muted">
+    Envoie un email à l'adresse de ton choix pour vérifier que tout fonctionne.
+    {% if cfg.DRY_RUN %}
+      <br><strong style="color:var(--or)">⚠️ DRY_RUN est actif : aucun mail ne partira vraiment.</strong>
+    {% endif %}
+  </p>
+  <form method="post" action="{{ url_for('test_smtp') }}">
+    <div class="flex" style="gap:10px">
+      <input type="email" name="email" required
+             placeholder="ton.email@exemple.com"
+             value="{{ cfg.SMTP_USER }}"
+             style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;
+                    background:var(--card);color:var(--text);font-size:14px">
+      <button class="btn" type="submit">📧 Envoyer le test</button>
+    </div>
+  </form>
+</div>
+
+{# ─── Session active ──────────────────────────────── #}
+{% if session %}
+<div class="card" style="border-left:4px solid var(--or)">
+  <div class="flex" style="justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <strong>⚠️ Une session est déjà en cours</strong>
+      <div class="muted" style="margin-top:4px">
+        Démarrer une nouvelle analyse remplacera la session actuelle.
+      </div>
+    </div>
+    <div class="flex">
+      <a class="btn secondary" href="{{ url_for('dashboard') }}">Voir le tableau de bord</a>
+      <a class="btn" href="{{ url_for('session_reprendre') }}">▶ Reprendre</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ─── Nouvelle analyse ────────────────────────────── #}
+<div class="card">
+  <h2>📄 Nouvelle analyse</h2>
+  <p class="muted">Déposez les deux PDF. Les emails, factures PDF et avoirs seront préparés automatiquement.</p>
+  <form method="post" action="{{ url_for('analyser') }}" enctype="multipart/form-data">
+    <div class="grid-2" style="margin:20px 0">
+      <label class="drop">
+        <input type="file" name="releve" accept="application/pdf" required>
+        <div class="icon">📄</div>
+        <div style="font-weight:600;margin-top:8px">Relevé des factures non soldées</div>
+        <div class="muted">PDF uniquement</div>
+      </label>
+      <label class="drop">
+        <input type="file" name="balance" accept="application/pdf" required>
+        <div class="icon">📊</div>
+        <div style="font-weight:600;margin-top:8px">Balance âgée</div>
+        <div class="muted">PDF uniquement</div>
+      </label>
+    </div>
+    <button class="btn" type="submit">Analyser et préparer les relances →</button>
+    {% if cfg.AUTO_SEND %}
+      <span class="muted" style="margin-left:12px;color:var(--rouge)">
+        ⚠ Mode envoi automatique actif
+      </span>
+    {% endif %}
+  </form>
+</div>
+
+{% endblock %}

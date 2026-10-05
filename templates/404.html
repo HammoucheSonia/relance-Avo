@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card" style="text-align:center;padding:60px 20px">
+  <div style="font-size:56px">🌿</div>
+  <h1>Page introuvable</h1>
+  <p class="muted">La page que vous cherchez n'existe pas ou a été déplacée.</p>
+  <a class="btn" href="{{ url_for('dashboard') }}">Retour au tableau de bord</a>
+</div>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="between" style="margin-bottom:20px">
+  <div>
+    <h1 style="margin:0">📅 Planning des relances</h1>
+    <p class="muted" style="margin-top:6px">
+      Qui relancer maintenant, qui bientôt, qui est à jour — basé sur la fréquence de chaque client.
+    </p>
+  </div>
+  <a class="btn secondary" href="{{ url_for('dashboard') }}">← Tableau de bord</a>
+</div>
+
+<div class="planning-grid">
+  <div class="planning-card now">
+    <div class="planning-icon">🔥</div>
+    <div class="planning-count">{{ stats.maintenant }}</div>
+    <div class="planning-label">À relancer<br>maintenant</div>
+    <div class="planning-amount">
+      {{ "{:,.0f}".format(stats.montant_maintenant).replace(",", " ") }} €
+    </div>
+  </div>
+  <div class="planning-card soon">
+    <div class="planning-icon">⏰</div>
+    <div class="planning-count">{{ stats.bientot }}</div>
+    <div class="planning-label">Bientôt<br>(≤ 3 jours)</div>
+    <div class="planning-amount">
+      {{ "{:,.0f}".format(stats.montant_bientot).replace(",", " ") }} €
+    </div>
+  </div>
+  <div class="planning-card ok">
+    <div class="planning-icon">✅</div>
+    <div class="planning-count">{{ stats.a_jour }}</div>
+    <div class="planning-label">À jour<br>(déjà relancés)</div>
+    <div class="planning-amount">&nbsp;</div>
+  </div>
+  <div class="planning-card free">
+    <div class="planning-icon">♾️</div>
+    <div class="planning-count">{{ stats.libres }}</div>
+    <div class="planning-label">Sans fréquence<br>(relançables à tout moment)</div>
+    <div class="planning-amount">&nbsp;</div>
+  </div>
+</div>
+
+{% if stats.nouveaux %}
+<div class="card" style="background:#fff4e5;border-left:4px solid var(--or)">
+  <div class="flex">
+    <span style="font-size:24px">🆕</span>
+    <div style="flex:1">
+      <strong>{{ stats.nouveaux }} nouveau(x) contact(s) sans fréquence</strong>
+      <div class="muted">Définissez leur fréquence pour qu'ils entrent dans le planning.</div>
+    </div>
+    <a class="btn gold" href="{{ url_for('session_reprendre') }}">Classer</a>
+  </div>
+</div>
+{% endif %}
+
+{% if maintenant %}
+<div class="card" style="border-left:4px solid #c08a1f">
+  <h2>🔥 À relancer maintenant ({{ maintenant|length }})</h2>
+  <p class="muted">Délai écoulé depuis la dernière relance — prêts à partir.</p>
+  <table class="planning-table">
+    <thead>
+      <tr>
+        <th>Client</th>
+        <th>Fréquence</th>
+        <th>Dernière relance</th>
+        <th class="num">Montant dû</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in maintenant %}
+      <tr>
+        <td>
+          <div class="flex">
+            <div class="avatar">{{ r.nom[:2].upper() }}</div>
+            <div>
+              <div style="font-weight:600">{{ r.nom }}</div>
+              <div class="muted">Code {{ r.code }} · {{ r.email or "pas d'email" }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="tag t-rappel_1" style="font-size:10px">
+            📅 {{ r.frequence_label }}
+          </span>
+        </td>
+        <td>
+          {% if r.derniere_relance %}
+            {{ r.derniere_relance[:10] }}
+            <div class="muted" style="font-size:11px">
+              (il y a {{ -r.jours_restants }} jour(s))
+            </div>
+          {% else %}
+            <span class="muted">Jamais relancé</span>
+          {% endif %}
+        </td>
+        <td class="num" style="color:var(--vert);font-weight:700">
+          {{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €
+        </td>
+        <td>
+          <a class="btn secondary sm" href="{{ url_for('client', code=r.code) }}">
+            Détail
+          </a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div style="margin-top:16px">
+    <a class="btn" href="{{ url_for('dashboard') }}">📧 Relancer maintenant</a>
+  </div>
+</div>
+{% endif %}
+
+{% if bientot %}
+<div class="card" style="border-left:4px solid #4b8b5b">
+  <h2>⏰ Bientôt relançables ({{ bientot|length }})</h2>
+  <p class="muted">Ces clients approchent de leur délai de relance.</p>
+  <table class="planning-table">
+    <thead>
+      <tr>
+        <th>Client</th>
+        <th>Fréquence</th>
+        <th>Dans</th>
+        <th class="num">Montant dû</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in bientot %}
+      <tr>
+        <td>
+          <div class="flex">
+            <div class="avatar">{{ r.nom[:2].upper() }}</div>
+            <div>
+              <div style="font-weight:600">{{ r.nom }}</div>
+              <div class="muted">Code {{ r.code }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag t-rappel_1" style="font-size:10px">📅 {{ r.frequence_label }}</span></td>
+        <td>
+          <strong style="color:var(--or)">
+            {{ r.jours_restants }} jour(s)
+          </strong>
+        </td>
+        <td class="num">{{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if libres %}
+<div class="card" style="border-left:4px solid #9ca3af">
+  <h2>♾️ Sans fréquence définie ({{ libres|length }})</h2>
+  <p class="muted">Ces clients sont relançables à tout moment, tant que le solde est dû.</p>
+  <table class="planning-table">
+    <thead>
+      <tr>
+        <th>Client</th>
+        <th class="num">Montant dû</th>
+        <th>Dernière relance</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in libres %}
+      <tr>
+        <td>
+          <div class="flex">
+            <div class="avatar">{{ r.nom[:2].upper() }}</div>
+            <div>
+              <div style="font-weight:600">
+                {% if r.est_nouveau %}🆕 {% endif %}{{ r.nom }}
+              </div>
+              <div class="muted">Code {{ r.code }}</div>
+            </div>
+          </div>
+        </td>
+        <td class="num">{{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €</td>
+        <td class="muted">
+          {% if r.derniere_relance %}{{ r.derniere_relance[:10] }}{% else %}Jamais{% endif %}
+        </td>
+        <td>
+          <select class="freq-select-inline" data-code="{{ r.code }}"
+                  style="padding:4px 8px;border-radius:6px;font-size:12px;
+                         border:1px solid var(--border);background:var(--card);
+                         color:var(--text)">
+            <option value="">Définir fréquence…</option>
+            <option value="hebdo">📅 Hebdomadaire</option>
+            <option value="quinzaine">📅 Quinzaine</option>
+            <option value="mensuel">📅 Mensuel</option>
+          </select>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if a_jour %}
+<div class="card" style="border-left:4px solid var(--vert)">
+  <h2>✅ À jour ({{ a_jour|length }})</h2>
+  <p class="muted">Récemment relancés, prochain rappel dans plusieurs jours.</p>
+  <table class="planning-table">
+    <thead>
+      <tr><th>Client</th><th>Fréquence</th><th>Prochaine relance</th>
+          <th class="num">Montant dû</th></tr>
+    </thead>
+    <tbody>
+    {% for r in a_jour %}
+      <tr>
+        <td>
+          <div class="flex">
+            <div class="avatar">{{ r.nom[:2].upper() }}</div>
+            <div>
+              <div style="font-weight:600">{{ r.nom }}</div>
+              <div class="muted">Code {{ r.code }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag t-paye" style="font-size:10px">📅 {{ r.frequence_label }}</span></td>
+        <td>
+          Dans <strong style="color:var(--vert)">{{ r.jours_restants }} jour(s)</strong>
+          <div class="muted" style="font-size:11px">{{ r.prochaine_relance[:10] }}</div>
+        </td>
+        <td class="num">{{ "{:,.2f}".format(r.montant_filtre).replace(",", " ") }} €</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if not maintenant and not bientot and not a_jour and not libres %}
+<div class="card" style="text-align:center;padding:48px 20px">
+  <div style="font-size:52px">🌿</div>
+  <h2 style="margin-top:16px">Aucun client à relancer</h2>
+  <p class="muted">Importez des PDF pour démarrer une analyse.</p>
+</div>
+{% endif %}
+
+<script>
+document.querySelectorAll('.freq-select-inline').forEach(sel => {
+  sel.addEventListener('change', async (e) => {
+    const code = e.target.dataset.code;
+    const freq = e.target.value;
+    if(!freq) return;
+    const r = await fetch(`/contact/${code}/frequence`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({frequence: freq})
+    });
+    if((await r.json()).ok){
+      toast(`📅 Fréquence enregistrée`);
+      setTimeout(() => window.location.reload(), 600);
+    }
+  });
+});
+</script>
+{% endblock %}

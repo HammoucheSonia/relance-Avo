@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card" style="text-align:center;padding:60px 20px">
+  <div style="font-size:56px">🎉</div>
+  <h1 style="margin-top:16px">Merci !</h1>
+  <p class="muted">
+    Votre paiement a bien été pris en compte. Vous recevrez une confirmation par email.
+  </p>
+  {% if code %}<p class="muted">Référence client : <strong>{{ code }}</strong></p>{% endif %}
+  <a class="btn" href="{{ url_for('dashboard') }}" style="margin-top:20px">Retour au tableau de bord</a>
+</div>
+{% endblock %}

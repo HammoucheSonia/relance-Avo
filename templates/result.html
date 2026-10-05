@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <h2>
+    {% if type_mail == "recap_hebdo" %}📋 Récap hebdo envoyé
+    {% else %}📧 Relances envoyées{% endif %}
+  </h2>
+  <table>
+    <thead><tr><th>Client</th><th>Email</th><th>Statut</th><th>PJ</th><th>Message</th></tr></thead>
+    <tbody>
+      {% for r in resultats %}
+      <tr>
+        <td><strong>{{ r.nom }}</strong> <span class="muted">({{ r.code }})</span></td>
+        <td>{{ r.email or '—' }}</td>
+        <td>
+          {% if r.statut == 'sent' %}<span class="tag t-paye">Envoyé</span>
+          {% elif r.statut == 'dry-run' %}<span class="tag t-rappel_2">Simulé</span>
+          {% elif r.statut == 'error' %}<span class="tag t-med">Erreur</span>
+          {% else %}<span class="tag t-ignore">Ignoré</span>{% endif %}
+        </td>
+        <td>{% if r.pieces %}{{ r.pieces|length }} 📄{% else %}—{% endif %}</td>
+        <td class="muted">{{ r.message or '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div style="margin-top:20px" class="flex">
+    <a class="btn" href="{{ url_for('dashboard') }}">← Tableau de bord</a>
+    <a class="btn secondary" href="{{ url_for('planning') }}">📅 Voir le planning</a>
+  </div>
+</div>
+{% endblock %}

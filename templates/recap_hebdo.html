@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="between" style="margin-bottom:20px">
+  <div>
+    <h1 style="margin:0">📋 Récap hebdomadaire du vendredi</h1>
+    <p class="muted" style="margin-top:6px">
+      Un mail informatif listant <strong>toutes les factures ET avoirs</strong>
+      de chaque client, avec le <strong>solde net</strong>.
+    </p>
+  </div>
+  <a class="btn secondary" href="{{ url_for('dashboard') }}">← Tableau de bord</a>
+</div>
+
+{% if est_vendredi %}
+<div class="card" style="background:linear-gradient(135deg,#1e5c3a,#2a7a4a);color:#fff">
+  <div class="flex" style="align-items:center;gap:16px">
+    <span style="font-size:40px">🎯</span>
+    <div style="flex:1">
+      <strong style="font-size:18px">C'est vendredi !</strong>
+      <div style="opacity:.9;margin-top:4px">
+        Le moment idéal pour envoyer le récap hebdo à vos clients.
+      </div>
+    </div>
+    <span style="font-size:32px">🌿</span>
+  </div>
+</div>
+{% else %}
+<div class="card" style="background:#fff4e5;border-left:4px solid var(--or)">
+  <div class="flex">
+    <span style="font-size:28px">📅</span>
+    <div style="flex:1">
+      <strong>Prochain vendredi dans {{ jours_avant_vendredi }} jour(s)</strong>
+      <div class="muted">Vous pouvez tout de même envoyer le récap maintenant.</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ─── Info avoirs ────────────────────────────────── #}
+<div class="card" style="background:var(--vert-pale);padding:12px 16px">
+  <strong style="font-size:13px">💡 Ce récap inclut les avoirs</strong>
+  <div class="muted" style="font-size:12px;margin-top:4px">
+    Les factures négatives (avoirs) sont listées séparément, et le <strong>solde net</strong>
+    est calculé automatiquement. Si le solde net est négatif, le client est en crédit chez vous.
+  </div>
+</div>
+
+<div class="card">
+  <h2>{{ relances|length }} client(s) recevront le récap</h2>
+
+  <form method="post" action="{{ url_for('recap_hebdo_envoyer') }}">
+    <p>
+      <label style="font-size:13px;font-weight:600">✏️ Template utilisé</label>
+      <select name="template_id"
+              style="padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);margin-left:8px">
+        <option value="">— Auto (par défaut) —</option>
+        {% for tid, t in templates.items() %}
+          {% if t.type == 'recap_hebdo' %}
+            <option value="{{ tid }}" {{ 'selected' if tid==tpl_recap_id }}>
+              {{ t.nom }}
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <a href="{{ url_for('templates_liste') }}" class="btn secondary sm" style="margin-left:8px">
+        ✏️ Gérer les templates
+      </a>
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px"><input type="checkbox" id="all" checked></th>
+          <th>Client</th>
+          <th>Email</th>
+          <th class="num">Factures</th>
+          <th class="num">Avoirs</th>
+          <th class="num">Solde net</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in relances %}
+        <tr>
+          <td>
+            {% if r.email %}
+              <input type="checkbox" name="codes" value="{{ r.code }}" checked>
+            {% else %}
+              <input type="checkbox" disabled>
+            {% endif %}
+          </td>
+          <td><strong>{{ r.nom }}</strong> <span class="muted">({{ r.code }})</span></td>
+          <td>{{ r.email or "—" }}</td>
+          <td class="num">{{ r.factures|selectattr('solde_du', 'gt', 0.005)|list|length }}</td>
+          <td class="num">
+            {% if r.avoirs %}
+              <span style="color:var(--or);font-weight:600">{{ r.avoirs|length }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="num"
+              style="color:{{ 'var(--rouge)' if r.solde_net < 0 else 'var(--vert)' }};font-weight:700">
+            {{ "{:,.2f}".format(r.solde_net).replace(",", " ") }} €
+            {% if r.solde_net < 0 %}
+              <div class="muted" style="font-size:10px;font-weight:400">crédit</div>
+            {% endif %}
+          </td>
+          <td><a class="btn secondary sm" href="#apercu-{{ r.code }}">Aperçu</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="between" style="margin-top:20px">
+      <div class="muted">
+        {{ relances|selectattr('email')|list|length }} envoi(s) prêt(s)
+      </div>
+      <div class="flex">
+        <a class="btn secondary" href="{{ url_for('dashboard') }}">Annuler</a>
+        <button class="btn" type="submit">📋 Envoyer le récap hebdo</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{# ─── Aperçus ────────────────────────────────────── #}
+{% for r in relances %}
+<div class="card" id="apercu-{{ r.code }}">
+  <div class="between" style="margin-bottom:10px">
+    <h3 style="margin:0">{{ r.nom }} <span class="muted">({{ r.code }})</span></h3>
+    {% if r.avoirs %}
+      <span class="tag" style="background:var(--or)">
+        {{ r.avoirs|length }} avoir(s) · solde net {{ "{:,.2f}".format(r.solde_net).replace(",", " ") }} €
+      </span>
+    {% endif %}
+  </div>
+  <div style="margin-bottom:8px">
+    <div class="muted" style="font-size:11px;font-weight:600">SUJET</div>
+    <div style="font-weight:600;padding:4px 0">{{ apercus[r.code].sujet }}</div>
+  </div>
+  <pre class="mail">{{ apercus[r.code].corps }}</pre>
+</div>
+{% endfor %}
+
+<script>
+document.getElementById('all')?.addEventListener('change', e => {
+  document.querySelectorAll('input[name=codes]').forEach(c => {
+    if(!c.disabled) c.checked = e.target.checked;
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+  "job_id": "8760f2ac6a25",
+  "finalise_le": "2026-10-04T18:34:51",
+  "note": "",
+  "stats": {
+    "a_relancer": 1,
+    "sans_email": 288,
+    "nouveaux": 278,
+    "deja_relances": 0,
+    "payes": 0,
+    "total_clients": 289,
+    "total_du": 39386.32,
+    "total_du_global": 1053006.55,
+    "total_avoirs": 0,
+    "total_envoye": 0,
+    "total_paye": 0,
+    "taux_recouvrement": 0.0,
+    "now_count": 1,
+    "bientot_count": 0,
+    "ok_count": 2
+  }
+}
